@@ -125,7 +125,7 @@ player_2_lives_840b = $840b
 0022: D8          ret  c
 0023: D6 64       sub  $64
 0025: 18 F9       jr   $0020
-0027: 00          nop
+
 
 ; 1/60th seconds
 irq_0038:
