@@ -8,10 +8,11 @@ input_dict = {
 
 }
 
-single_line_to_cc_protect = set()
-remove_error_in_next_line = set()
-line_to_push_cc_protect = set() | single_line_to_cc_protect
-line_to_pull_cc_protect = set() | single_line_to_cc_protect
+single_line_to_cc_protect = {0x0382,0x1a29,0x3b27,0x3bcf,0x3b41}
+remove_error_in_next_line = {0x0383,0x1a2a,0x3D7C,0x3bd1,0x3b29,0x3b43}
+remove_error_in_prev_line = {0x01b4,0x0239,0x32f0,0x333e,0x34b3,0X34d8,0x38eb,0x391c}
+line_to_push_cc_protect = {0x2386} | single_line_to_cc_protect
+line_to_pull_cc_protect = {0x2387} | single_line_to_cc_protect
 
 store_to_video = re.compile("GET_ADDRESS\s+(0xd\w\w\w|video_ram_d)",flags=re.I)   # game_specific
 
@@ -221,13 +222,42 @@ with open(source_dir / "conv.s") as f:
         ###############################################
         # game_specific
 
-##        if "replace by EXG_A_A_PRIME" in line:
-##            # no need to swap F with F', ever in this game
-##            lines[i-1] = "* just swap A/A'\n"+change_instruction("EXG_A_A_PRIME",lines,i-1)
-##            line = remove_error(line)
+        if "replace by EXG_A_A_PRIME" in line:
+            # no need to swap F with F', ever in this game
+            lines[i-1] = "* just swap A/A'\n"+change_instruction("EXG_A_A_PRIME",lines,i-1)
+            line = remove_error(line)
         if "unsupported instruction im" in line:
             line = remove_error(line)
+        if address == 0x8:
+            line = """    MAKE_HL_NO_AR
+    and.w #0xFF,d0
+    add.w   d0,d0
+    add.w    d0,d6
+    MAKE_H
+    rts
 
+"""
+        elif address == 0x10:
+            line = """    MAKE_HL_NO_AR
+    and.w #0xFF,d0
+    add.w    d0,d6
+    move.b    d6,d0   | so routine is equivalent to original
+    MAKE_H
+    rts
+
+"""
+            lines[i+3] = remove_error(lines[i+3])
+        elif address == 0x3d7a:
+            line = swap_lines(lines,i,i-1)
+
+        elif address in {0x01b4,0x239,0X38eb,0x391c}:
+            # stack shit
+            line = remove_instruction(lines,i)
+
+        elif address in {0x32f0,0x34d8}:
+            line = change_instruction("SAVE_STACK",lines,i)
+        elif address in {0x333e,0x34b3}:
+            line = change_instruction("RESTORE_STACK",lines,i)
 
         # end game_specific
         ###############################################
@@ -237,6 +267,8 @@ with open(source_dir / "conv.s") as f:
         if address in line_to_push_cc_protect:
             # protect the sub instructions
             line = "\tPUSH_SR\n"+line
+        elif address in remove_error_in_prev_line:
+            lines[i-1] = remove_error(lines[i-1])
         elif address in remove_error_in_next_line:
             lines[i+1] = remove_error(lines[i+1])
         if "GET_ADDRESS" in line:

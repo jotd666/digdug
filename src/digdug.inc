@@ -18,9 +18,13 @@
 
 
 	.macro	ERROR	arg
-	.error	"\arg"     | comment out or replace by ".warning" to disable errors
+	.warning	"\arg"     | comment out or replace by ".warning" to disable errors
 	.endm
 
+	.macro	DAA
+	.warning	"DAA"
+	.endm
+	
 	.macro	VIDEO_BYTE_DIRTY
 	jbsr	osd_video_byte_dirty
 	.endm
@@ -405,6 +409,13 @@
 	GET_UNCHECKED_ADDRESS_FUNC	\dest
 	.endm
 
+	.macro	SAVE_STACK
+	BREAKPOINT	"SAVESSK"
+	.endm
+	.macro	RESTORE_STACK
+	BREAKPOINT	"RESTSSK"
+	.endm
+	
 * < A0: source (HL)
 * < A1: destination (DE)
 * < D1: length (16 bit)
@@ -468,12 +479,12 @@ get_address:
 
 	.ifne	OPT_ENABLE_LOGGING
 	.macro	LOG_REGS	z80pc
-	move.w	sr,-(a7)
+	PUSH_SR
 	move.w	#0x\z80pc,-(a7)
 	move.w	#0,-(a7)  | cpu 0
 	jbsr	osd_log_cpu
 	addq.w	#4,a7
-	move.w	(a7)+,sr
+	POP_SR
 	.endm
 	.macro	ENABLE_LOG_REGS
 	moveq	#1,d7		| enable
