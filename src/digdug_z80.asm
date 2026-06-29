@@ -96,10 +96,12 @@ player_2_score_8417 = $8417
 watchdog_6830 = $6830
 player_1_lives_840a = $840a
 player_2_lives_840b = $840b
+video_ram_8000 = $8000
 
+reset_0000:		; [global]
 0000: F3          di
 0001: ED 56       im   1
-0003: C3 E6 00    jp   $00E6
+0003: C3 E6 00    jp   init_00e6
 
 add_2a_to_hl_0008:
 0008: 87          add  a,a
@@ -123,14 +125,16 @@ add_a_to_hl_0010:
 001D: 00          nop
 001E: 00          nop
 001F: 00          nop
+
+modulo_100_0020:
 0020: FE 64       cp   $64
 0022: D8          ret  c
 0023: D6 64       sub  $64
-0025: 18 F9       jr   $0020
+0025: 18 F9       jr   modulo_100_0020
 
 
 ; 1/60th seconds
-irq_0038:
+irq_0038:			; [global]
 0038: C3 80 02    jp   $0280
 
 watchdog_delay_005a:
@@ -143,7 +147,7 @@ watchdog_delay_005a:
 0065: C9          ret
 
 ; called twice as much as irq: 1/120s!!
-dequeue_006c:
+dequeue_006c:	; [global]
 006C: F5          push af
 006D: 2A 00 89    ld   hl,($8900)
 0070: 7E          ld   a,(hl)
@@ -229,6 +233,8 @@ enqueue_00a1:
 00DF: 22 02 89    ld   ($8902),hl
 00E2: E1          pop  hl
 00E3: C3 AA 00    jp   $00AA
+
+init_00e6:
 00E6: 3E 10       ld   a,$10
 00E8: 32 00 71    ld   ($7100),a
 00EB: 32 00 70    ld   ($7000),a
@@ -261,7 +267,8 @@ enqueue_00a1:
 0115: 77          ld   (hl),a
 0116: 23          inc  hl
 0117: 10 FC       djnz $0115
-0119: C3 7E 38    jp   $387E
+0119: C3 7E 38    jp   memory_test_387e
+
 011C: F3          di
 011D: AF          xor  a
 011E: 32 20 68    ld   ($6820),a
@@ -528,10 +535,10 @@ mainloop_0238:
 034C: 3A A7 85    ld   a,($85A7)
 034F: 77          ld   (hl),a
 0350: FE B0       cp   $B0
-0352: D2 7E 38    jp   nc,$387E
+0352: D2 7E 38    jp   nc,memory_test_387e
 0355: E6 0F       and  $0F
 0357: FE 0A       cp   $0A
-0359: D2 7E 38    jp   nc,$387E
+0359: D2 7E 38    jp   nc,memory_test_387e
 035C: 7E          ld   a,(hl)
 035D: A7          and  a
 035E: 20 0E       jr   nz,$036E
@@ -6316,7 +6323,7 @@ add_to_score_2fb5:
 33B6: 01 00 03    ld   bc,$0300
 33B9: CD C6 36    call $36C6
 33BC: 06 05       ld   b,$05
-33BE: CD E9 36    call $36E9
+33BE: CD E9 36    call sub_20_to_de_36e9
 33C1: 10 FB       djnz $33BE
 33C3: 3A 88 89    ld   a,($8988)
 33C6: 0E 10       ld   c,$10
@@ -6410,7 +6417,7 @@ add_to_score_2fb5:
 3485: CB BE       res  7,(hl)
 3487: 4E          ld   c,(hl)
 3488: EB          ex   de,hl
-3489: CD E9 36    call $36E9
+3489: CD E9 36    call sub_20_to_de_36e9
 348C: ED 53 C9 89 ld   ($89C9),de
 3490: 3E 28       ld   a,$28
 3492: 32 CD 89    ld   ($89CD),a
@@ -6550,8 +6557,8 @@ add_to_score_2fb5:
 359A: A7          and  a
 359B: 3E 00       ld   a,$00
 359D: 20 06       jr   nz,$35A5
-359F: CD E9 36    call $36E9
-35A2: C3 E9 36    jp   $36E9
+359F: CD E9 36    call sub_20_to_de_36e9
+35A2: C3 E9 36    jp   sub_20_to_de_36e9
 35A5: E5          push hl
 35A6: C5          push bc
 35A7: 21 CA 37    ld   hl,$37CA
@@ -6567,7 +6574,7 @@ add_to_score_2fb5:
 35B7: ED A0       ldi
 35B9: ED A0       ldi
 35BB: D1          pop  de
-35BC: CD E9 36    call $36E9
+35BC: CD E9 36    call sub_20_to_de_36e9
 35BF: 10 F1       djnz $35B2
 35C1: C1          pop  bc
 35C2: E1          pop  hl
@@ -6582,7 +6589,7 @@ add_to_score_2fb5:
 35D6: 06 18       ld   b,$18
 35D8: 3E 40       ld   a,$40
 35DA: 12          ld   (de),a
-35DB: CD E9 36    call $36E9
+35DB: CD E9 36    call sub_20_to_de_36e9
 35DE: 10 F8       djnz $35D8
 35E0: D1          pop  de
 35E1: 13          inc  de
@@ -6615,17 +6622,17 @@ add_to_score_2fb5:
 3610: B1          or   c
 3611: 12          ld   (de),a
 3612: 23          inc  hl
-3613: CD E9 36    call $36E9
+3613: CD E9 36    call sub_20_to_de_36e9
 3616: 10 F7       djnz $360F
-3618: CD E9 36    call $36E9
-361B: CD E9 36    call $36E9
+3618: CD E9 36    call sub_20_to_de_36e9
+361B: CD E9 36    call sub_20_to_de_36e9
 361E: CD 45 36    call $3645
 3621: 06 04       ld   b,$04
-3623: CD E9 36    call $36E9
+3623: CD E9 36    call sub_20_to_de_36e9
 3626: 10 FB       djnz $3623
 3628: CD 64 36    call $3664
-362B: CD E9 36    call $36E9
-362E: CD E9 36    call $36E9
+362B: CD E9 36    call sub_20_to_de_36e9
+362E: CD E9 36    call sub_20_to_de_36e9
 3631: 7E          ld   a,(hl)
 3632: 23          inc  hl
 3633: 66          ld   h,(hl)
@@ -6634,7 +6641,7 @@ add_to_score_2fb5:
 3637: 7E          ld   a,(hl)
 3638: B1          or   c
 3639: 12          ld   (de),a
-363A: CD E9 36    call $36E9
+363A: CD E9 36    call sub_20_to_de_36e9
 363D: 23          inc  hl
 363E: 10 F7       djnz $3637
 3640: C1          pop  bc
@@ -6657,7 +6664,7 @@ add_to_score_2fb5:
 3656: 1A          ld   a,(de)
 3657: B1          or   c
 3658: 12          ld   (de),a
-3659: CD E9 36    call $36E9
+3659: CD E9 36    call sub_20_to_de_36e9
 365C: 10 F8       djnz $3656
 365E: E1          pop  hl
 365F: 23          inc  hl
@@ -6690,7 +6697,7 @@ add_to_score_2fb5:
 3687: C6 10       add  a,$10
 3689: B1          or   c
 368A: 12          ld   (de),a
-368B: CD E9 36    call $36E9
+368B: CD E9 36    call sub_20_to_de_36e9
 368E: C9          ret
 
 
@@ -6716,6 +6723,7 @@ add_to_score_2fb5:
 36E4: A1          and  c
 36E5: CC F0 36    call z,$36F0
 36E8: 12          ld   (de),a
+sub_20_to_de_36e9:
 36E9: 7B          ld   a,e
 36EA: D6 20       sub  $20
 36EC: 5F          ld   e,a
@@ -6724,7 +6732,9 @@ add_to_score_2fb5:
 36EF: C9          ret
 36F0: 3E 37       ld   a,$37
 36F2: C9          ret
-36F3: 4E          ld   c,(hl)
+
+* < HL: rom address
+36F3: 4E          ld   c,(hl)		; [breakpoint]
 36F4: 23          inc  hl
 36F5: 46          ld   b,(hl)
 36F6: 23          inc  hl
@@ -6738,10 +6748,11 @@ add_to_score_2fb5:
 3701: 28 05       jr   z,$3708
 3703: 81          add  a,c
 3704: 12          ld   (de),a
-3705: CD E9 36    call $36E9
+3705: CD E9 36    call sub_20_to_de_36e9
 3708: 23          inc  hl
 3709: 10 F0       djnz $36FB
 370B: C9          ret
+
 370C: D6 30       sub  $30
 370E: FE 0A       cp   $0A
 3710: D8          ret  c
@@ -6763,6 +6774,7 @@ add_to_score_2fb5:
 372A: 3E FF       ld   a,$FF
 372C: C9          ret
 
+memory_test_387e:
 387E: F3          di
 387F: 3E 10       ld   a,$10
 3881: 32 00 71    ld   ($7100),a
@@ -6838,13 +6850,15 @@ add_to_score_2fb5:
 38F4: 01 20 00    ld   bc,$0020
 38F7: ED B0       ldir
 38F9: 21 00 84    ld   hl,$8400
-38FC: CD E3 3D    call $3DE3
+38FC: CD E3 3D    call memory_test_3de3
 38FF: 21 00 88    ld   hl,$8800
-3902: CD E3 3D    call $3DE3
+3902: CD E3 3D    call memory_test_3de3
 3905: 21 00 90    ld   hl,$9000
-3908: CD E3 3D    call $3DE3
+3908: CD E3 3D    call memory_test_3de3
 390B: 21 00 98    ld   hl,$9800
-390E: CD E3 3D    call $3DE3
+390E: CD E3 3D    call memory_test_3de3
+; memory test has ended
+end_memory_test_3911:   	; [global]
 3911: 21 00 80    ld   hl,$8000
 3914: 11 E0 89    ld   de,$89E0
 3917: 01 20 00    ld   bc,$0020
@@ -7286,13 +7300,13 @@ add_to_score_2fb5:
 3CA2: 2F          cpl
 3CA3: C6 1A       add  a,$1A
 3CA5: 12          ld   (de),a
-3CA6: CD E9 36    call $36E9
+3CA6: CD E9 36    call sub_20_to_de_36e9
 3CA9: 0D          dec  c
 3CAA: C0          ret  nz
 3CAB: 0E 04       ld   c,$04
 3CAD: 3E 35       ld   a,$35
 3CAF: 12          ld   (de),a
-3CB0: C3 E9 36    jp   $36E9
+3CB0: C3 E9 36    jp   sub_20_to_de_36e9
 3CB3: 3A A7 85    ld   a,($85A7)
 3CB6: E6 03       and  $03
 3CB8: 28 02       jr   z,$3CBC
@@ -7404,6 +7418,8 @@ add_to_score_2fb5:
 3DDB: 32 03 A0    ld   ($A003),a
 3DDE: 32 30 68    ld   (watchdog_6830),a
 3DE1: 18 FE       jr   $3DE1
+
+memory_test_3de3:
 3DE3: D9          exx
 3DE4: 06 10       ld   b,$10
 3DE6: D9          exx

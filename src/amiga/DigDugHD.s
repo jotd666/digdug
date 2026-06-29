@@ -139,4 +139,4 @@ progstart
     dc.l    0
 exe
 	
-	dc.b	"commando",0
+	dc.b	"digdug",0

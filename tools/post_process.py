@@ -9,10 +9,10 @@ input_dict = {
 }
 
 single_line_to_cc_protect = {0x0382,0x1a29,0x3b27,0x3bcf,0x3b41}
-remove_error_in_next_line = {0x0383,0x1a2a,0x3D7C,0x3bd1,0x3b29,0x3b43}
-remove_error_in_prev_line = {0x01b4,0x0239,0x32f0,0x333e,0x34b3,0X34d8,0x38eb,0x391c}
-line_to_push_cc_protect = {0x2386} | single_line_to_cc_protect
-line_to_pull_cc_protect = {0x2387} | single_line_to_cc_protect
+remove_error_in_next_line = {0x0383,0x1a2a,0x3D7C,0x3bd1,0x3b29,0x3b43,0x2387,0x29dc,0x3410,0x359d}
+remove_error_in_prev_line = {0x01b4,0x0239,0x32f0,0x333e,0x34b3,0X34d8,0x38eb,0x391c,0x340f}
+line_to_push_cc_protect = set() | single_line_to_cc_protect
+line_to_pull_cc_protect = set() | single_line_to_cc_protect
 
 store_to_video = re.compile("GET_ADDRESS\s+(0xd\w\w\w|video_ram_d)",flags=re.I)   # game_specific
 
@@ -249,6 +249,9 @@ with open(source_dir / "conv.s") as f:
             lines[i+3] = remove_error(lines[i+3])
         elif address == 0x3d7a:
             line = swap_lines(lines,i,i-1)
+        elif address == 0x359b:
+            line = swap_lines(lines,i,i-2)
+            line = "\ttst.b\t(a0)  | [$359a: and  a]\n"
 
         elif address in {0x01b4,0x239,0X38eb,0x391c}:
             # stack shit
@@ -258,6 +261,24 @@ with open(source_dir / "conv.s") as f:
             line = change_instruction("SAVE_STACK",lines,i)
         elif address in {0x333e,0x34b3}:
             line = change_instruction("RESTORE_STACK",lines,i)
+        elif address == 0x36e9:
+            line = """\tsub.b\t#0x20,d4
+\tjcs\t0f
+\tsubq.b\t#1,d3
+0:
+\trts
+"""
+            kill_code(lines,i+1,0X36ef)
+        # sub in one take
+        elif address in {0X2384,0x29d9}:
+            lines[i+1] = change_instruction("sub.b\td1,(a0)",lines,i+1)
+            lines[i+2] = remove_instruction(lines,i+1)
+        elif address in {0X2386,0x29db}:
+            line = remove_instruction(lines,i)
+        elif address == 0x340f:
+            line = remove_instruction(lines,i,False)  # optim
+            line = "\tPUSH_SR\n"
+            lines[i+1] += "\tPOP_SR\n"
 
         # end game_specific
         ###############################################

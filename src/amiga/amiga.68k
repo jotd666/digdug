@@ -35,7 +35,7 @@ AFB_68020 = 1
 *NO68020 = 1
 
 
-NB_PLAYFIELD_PLANES = 6
+NB_PLAYFIELD_PLANES = 4
 	.ifndef	NB_PLAYFIELD_PLANES
 	.error	"NB_PLAYFIELD_PLANES must be defined via --defsym"
 	.endif
@@ -217,21 +217,7 @@ LONG_FIRE_TIMER_VALUE = 30
 	move.w	#\v,_custom+color	
 	.endm
 
-	.macro	WRITE_TEXT	text,x_offset
-	lea		\text,a1
-	lea		(0x2047+\x_offset+0x20*row,a6),a0
-	move.b	current_color,d0
-	jbsr	display_text
-	.set	row,row+1
-	.endm
 
-	.macro	WRITE_HEX	value
-	move.w	\value,d1
-	lea		(0x2047+0x20*row+14,a6),a0
-	move.b	current_color,d0
-	jbsr	display_number
-	.set	row,row+1
-	.endm
 	
 	* OSD ENTER/EXIT aren't useful for a Z80 game
 	* as the code rarely uses the native stack to quick-read memory
@@ -772,25 +758,17 @@ demo_game:
 	move.l	#0x4AFC4EF9,(a0)+
 	move.l	(a7)+,(a0)+
 	* protect ROM from writing if whdload on
-	move.l	#0xC000,d0
+	move.l	#0x4000,d0
 	move.l	a6,a0
 	move.l  (_resload,pc),a2
 	jsr     (resload_ProtectWrite,a2)
-	* protect graphics area: it doesn't work
-	move.l	#end_tables,d0
-	lea	fg_character_table,a0
-	sub.l	a0,d0
-	move.l  (_resload,pc),a2
-	BREAKPOINT	"FUCKKK"
-	*jsr     (resload_ProtectWrite,a2)
-0:
+
 	.endif
 	
 
 	* enable interrupts. Game doesn't use them
 	* but relies on vbl sync flags
 	
-	jbsr	cache_fg_tiles_address
 	jbsr	cache_bg_tiles_address
 
 
@@ -830,14 +808,10 @@ demo_game:
 	GET_MEMORY_START_IN_A6	
 	jbsr	cpu_init		| zero most registers
 	jbsr	hw_init
-	jmp		reset_0000								| pass control to the mpatrol core
+	jmp		end_memory_test_3911			| pass control to the digdug core
 	
 hw_init:
-	st.b	(system_c000,a6)
-	st.b	(port_1_c001,a6)
-	st.b	(port_2_c002,a6)
-	st.b	(dsw1_c003,a6)
-	move.b	#0x1F,(dsw2_c004,a6)
+
 	rts
 	
 * zero all registers
@@ -1007,17 +981,6 @@ osd_set_x_page:
 	rts
 
 	
-force_fg_tiles_redraw:
-	lea		(fg_tiles_address_d000,a6),a0
-	move.w	#0x3FF,d1	
-0:
-	jbsr	osd_video_byte_dirty
-	addq	#2,a0
-	dbf		d1,0b
-	rts
-
-	
-
 
 	
 	
@@ -1051,7 +1014,14 @@ call_nmi:
 	* set base for RAM
 	GET_MEMORY_START_IN_A6
 	
-	jra	irq_02b7
+	jra	irq_0038
+	
+call_dequeue:
+	* reset most registers
+	* set base for RAM
+	GET_MEMORY_START_IN_A6
+	
+	jra	dequeue_006c
 	
 * <D0,D1 current & prev joy states
 
@@ -1184,25 +1154,17 @@ level1_interrupt:
 	clr.b	d0
 1:
 	move.b	d0,mid_screen_interrupt_count
+	jbsr	call_dequeue
+	
 	jra		3f	| no need to update sprites we're in the middle of a frame
 2:
 
 
 	jbsr	call_nmi
+	jbsr	call_dequeue
 
 	GET_MEMORY_START_IN_A6
-	
-	moveq	#0,d0
-	move.w	(background_scroll_x_lsb_c80a,a6),d0
-	ror.w	#8,d0		| hardware is in little endian
-	move.w	D0,game_scroll_x
-	move.w	(background_scroll_y_lsb_c808,a6),d0
-	ror.w	#8,d0		| hardware is in little endian
-	add.w	#0x100,d0	| 0: bottom part
-	and.w	#0x1FF,d0
-	neg.w	d0
-	add.w	#0x1FF,d0
-	move.w	D0,game_scroll_y
+
 	
 	* ok now D5 can be used freely
 
@@ -1265,56 +1227,6 @@ level1_interrupt:
 	jbsr	set_bobs_bitplanes
 	.endif
 	
-	.ifndef	RELEASE
-	tst.b	osd_debug_active
-	jeq		0f
-	.set	row,2
-	GET_MEMORY_START_IN_A6
-	move.b	#2,current_color
-	WRITE_TEXT	scrollx_text,0
-	WRITE_TEXT	scrolly_text,0
-	WRITE_TEXT	hscrollx_text,0
-	WRITE_TEXT	last_x_offset_text,0
-	move.b	#4,current_color
-	WRITE_TEXT	debug_1_text,0
-	WRITE_TEXT	debug_2_text,0
-	WRITE_TEXT	debug_3_text,0
-
-	.set		row,2
-	move.b	#3,current_color
-	WRITE_HEX	game_scroll_x
-	WRITE_HEX	game_scroll_y
-	WRITE_HEX	host_scroll_x
-	lea		display_slots,a2
-	tst.b	(a2)
-	jeq		10f
-	move.w	(2,a2),d0
-	move.w	(a6,d0.w),d0
-	WRITE_HEX	d0
-	.set	row,row-1	
-10:
-	.set	row,row+1	
-	addq	#4,a2
-	tst.b	(a2)
-	jeq		10f
-	move.w	(2,a2),d0
-	move.w	(a6,d0.w),d0
-	WRITE_HEX	d0
-	.set	row,row-1		
-10:
-	.set	row,row+1	
-	addq	#4,a2
-	tst.b	(a2)
-	jeq		10f
-	move.w	(2,a2),d0
-	move.w	(a6,d0.w),d0
-	WRITE_HEX	d0
-	.set	row,row-1		
-10:
-	
-	
-0:
-	.endif
 	
 	
 	lea	_custom,a5
@@ -1869,24 +1781,12 @@ really_update_sprites:
 	***********************
 	
 	GET_MEMORY_START_IN_A6
-	.ifdef	MC68020
-	move.w	global_y_msb_copy_e05b(a6),d0
-	.else
-	move.b	global_y_msb_copy_e05b(a6),d0
-	lsl.w	#8,d0
-	move.b	global_y_lsb_copy_e05c(a6),d0
-	.endif
-	
+
 	
 	move.l	bob_previous_drawn_sprites(pc),a4
-	move.l	(a4)+,d6		| value of scroll X/Y at the time of the draw
-	cmp.l	game_scroll_x,d6
-	seq		d6				| flag set: scrolling hasn't been updated since last draw
 
-	tst.w	d0
-	jne		0f
 	moveq	#0,d6			| if master Y is 0 (heli arriving) don't optimize palm trees
-0:
+
 	lea		_custom,a5
 
 
@@ -1939,7 +1839,6 @@ really_update_sprites:
 
     lea _custom,A5
 	move.l	bob_previous_drawn_sprites(pc),a6
-	move.l	game_scroll_x,(a6)+	| note down scrolling values at the current time
 	
 	lea		shared_bob_table,a4
 	
@@ -2107,8 +2006,6 @@ update_one_bob:
 	sne		d3		| convert attribute to boolean 0/ff for mirror_sprite_planes
 	jbsr	mirror_sprite_planes
 103:	
-	* BOBs must follow screen scroll
-	add.w	bobs_game_scroll_y,d1
 	
 	* D0 and D1 are already set
 	move.l	(NB_PLAYFIELD_PLANES*4,a0),d2
@@ -2813,15 +2710,6 @@ platform_init:
 
 	
 	
-	lea		hw_sprite_ram_buffer,a0
-	jbsr	align_for_fmode
-	moveq	#7,d0
-	lea		hw_sprite_pointers,a1
-0:
-	move.l	a0,(a1)+
-	add.w	#HW_SPRITE_BUFFER_SIZE,a0
-	dbf		d0,0b
-	
 	lea		bobs_screen_buffer_1,a0
 	addq	#2,a0	| leave 16 bits hidden for left side clipping
 	jbsr	align_for_fmode
@@ -2958,19 +2846,6 @@ platform_init:
 
 
 	
-*	lea		hw_sprite_pointers,a0
-*	move.w	#0x48,d7
-*
-*2:
-*	move.b	#0x48,d0
-*	move.b	#1,d1
-*	jbsr	update_fg_tile
-*	
-*	addq	#1,d7
-*	cmp.w	#0x400,d7
-*	jne		2b
-	
-	
 	
     rts
 	
@@ -3037,10 +2912,10 @@ osd_video_byte_dirty:
 	sub.l	a6,d7
 	jmi		osd_w_videoram_out
 
-	* we now suppose that we're in 2000-3000
+	* we now suppose that we're in 8000-83FF
 	* check that in debug mode
 	.ifndef		RELEASE
-	cmp.w	#FG_SCREEN_TILE_ADDRESS+0x1000,d7
+	cmp.w	#video_ram_8000+0x400,d7
 	jcs		0f
 1:
 	BREAKPOINT	"write videoram out of range (D7)"
@@ -3048,26 +2923,19 @@ osd_video_byte_dirty:
 0:
 	.endif
 	
-	sub.w	#FG_SCREEN_TILE_ADDRESS,d7
+	sub.w	#video_ram_8000,d7
 	.ifndef	RELEASE
 	jpl		0f
-	add.w	#FG_SCREEN_TILE_ADDRESS,d7
+	add.w	#video_ram_8000,d7
 	BREAKPOINT	"write videoram out of range (D7)"
 	jra		osd_w_videoram_out
 0:
 	.endif
 	
-	cmp.w	#BG_SCREEN_TILE_ADDRESS-FG_SCREEN_TILE_ADDRESS,d7
-	jcc		bg_tile
-	
+
 	and.w	#0x3FF,d7
 
-	lea		(FG_SCREEN_TILE_ADDRESS,a6),a0
-	move.b	(a0,d7.w),d0
-	lea		(FG_SCREEN_COLOR_ADDRESS,a6),a0
-	move.b	(a0,d7.w),d1
 
-	jbsr	update_fg_tile
 
 osd_w_videoram_out:
 	movem.l	(a7)+,d0-d7/a0-a3/a5
@@ -3076,11 +2944,6 @@ osd_w_videoram_out:
 	
 	
 	
-	
-bg_tile:
-	and.w	#0x3FF,d7
-	
-
 	
 	* tile is in screen considered the current scrolling: update it
 	* (don't check Y we need update no matter when in that case)
@@ -3476,20 +3339,6 @@ bg_mirror_jump_table:
 	.long	mirror_flipped_tile16
 	
 	
-cache_fg_tiles_address:
-	moveq	#0,d7
-	lea		fg_tile_address_table,a0
-0:
-	jbsr	compute_fg_tile_xy
-
-	move.b	d0,(a0)+		| store offset
-	move.b	d1,(a0)+		| store offset
-
-	addq.w	#1,d7
-	cmp.w	#0x400,d7
-	jne		0b
-	rts
-
 
 * < D7: 0-0x400
 * > D0/D1: coords 
@@ -3509,164 +3358,7 @@ compute_fg_tile_xy:
 	rts
 
 
-	.macro	NEXT_SOURCE_PLANE
-	move.l	(a4)+,d0		| next plane
-	jne		5f
-	move.l	#empty_row,d0
-5:	
-	move.l	d0,a0
-	.endm
 
-* < D7: 0-0x400 offset
-* < D0: tile code
-* < D1: tile attribute
-
-update_fg_tile:
-	* if < 0x40 bail out as not visible (same as in Ghosts'n'Goblins)
-	cmp.w	#0x40,d7
-	jcc		0f
-	rts
-0:
-
-	moveq	#0,d2
-	moveq	#0,d3
-	move.b	d0,d2	| code
-	move.b	d1,d3	| attribute + tile msbits (flip/mirror not used!)
-	and.w	#0xC0,d3
-	lsl.w	#2,d3
-	add.w	d3,d2	| extended tile code
-	move.b	d1,d3	| attribute + tile msbits
-	and.w	#FG_TILE_NB_CLUTS-1,d3	| clut
-
-
-	lea		fg_tile_address_table,a1
-	.ifdef	NO68020
-	add.w	d7,d7
-	move.w	(a1,d7.w),d0
-	.else
-	move.w	(a1,d7.w*2),d0
-	.endif
-	moveq	#0,d1
-	move.b	d0,d1
-	lsr.w	#8,d0
-	
-	* select which destination sprites (0-3)
-	move.w	d0,d4
-	lea		hw_sprite_pointers,a1
-	and.w	#0xF8,d4		| divide by 8
-							| then multiply by 8 (sprite go by pairs)
-	lea	(a1,d4.w),a1
-
-	
-	and.w	#0x7,d0		| dest X offset
-	lsl.w	#4,d1		| dest Y offset (8*2 pixels per row)
-	add.w	d0,d1
-	add.w	#0x10,d1	| skip control word
-	
-	* get 2 pointers for 2 attached sprites
-	move.l	(a1)+,a2
-	move.l	(a1),a1
-	
-
-	exg		a1,a2
-	* add offset to destination
-	add.w	d1,a2
-	add.w	d1,a1
-	
-	* now get source data
-	lea		fg_character_table,a0
-	
-
-20:
-
-	* updating bitplanes
-
-	.ifdef	MC68020
-	move.l	(a0,d2.l*4),d0		| tile pointer as LONG!
-	.else
-	add.w	d2,d2
-	add.w	d2,d2	
-	move.l	(a0,d2.l),d0		| tile pointer as LONG!
-	.endif
-	
-	.ifdef	RELEASE
-	jeq		11f 	| can happen when tile code is read when screen is being erased	
-	.else
-	jne		12f
-	.ifndef	MC68020
-	lsr.w	#2,d2
-	.endif
-	add.w	#FG_SCREEN_TILE_ADDRESS,d7
-	**COLOR0_FLASH	0x00F
-	*BREAKPOINT	"unregistered game tile (in D2, at address D7)"	
-
-	jra		11f
-	.endif
-12:
-	move.b	d3,d1
-	lsr.b	#4,d1
-	and.w	#3,d1		| mirror/flip
-	
-	and.w	#FG_TILE_NB_CLUTS-1,d3	| clut
-
-	move.l	d0,a4
-	.ifdef	MC68020
-	move.l	(a4,d3.w*4),d0	| get proper clut
-	.else
-	add.w	d3,d3
-	add.w	d3,d3	
-	move.l	(a4,d3.w),d0	| get proper clut
-	.endif
-	jeq		11f
-	
-	
-	move.l	d0,a4		| directly pointer on tile bitplanes
-	
-
-standard_tile8:
-	* first plane: first sprite
-	NEXT_SOURCE_PLANE
-	.set	offset,0
-	.rept	8
-	move.b	(a0)+,d0
-	move.b	d0,(offset,a1)
-	.set	offset,offset+16
-	.endr
-	* second plane: first sprite, with a 8 offset
-	NEXT_SOURCE_PLANE
-	.set	offset,8
-	.rept	8
-	move.b	(a0)+,d0
-	move.b	d0,(offset,a1)
-	.set	offset,offset+16
-	.endr
-	* third plane: second sprite
-	NEXT_SOURCE_PLANE
-	.set	offset,0
-	.rept	8
-	move.b	(a0)+,d0
-	move.b	d0,(offset,a2)
-	.set	offset,offset+16
-	.endr
-	* second plane: second sprite, with a 8 offset
-	NEXT_SOURCE_PLANE
-	.set	offset,8
-	.rept	8
-	move.b	(a0)+,d0
-	move.b	d0,(offset,a2)
-	.set	offset,offset+16
-	.endr
-
-11:
-	rts
-
-flipped_tile8:
-mirror_tile8:
-mirror_flipped_tile8:
-	BREAKPOINT	"flflfl"
-	rts
-empty_row:
-	.skip	8
 		
 * < d0.w: x
 * < d1.w: y
@@ -3729,35 +3421,6 @@ HW_SpriteYTable_\height:
 set_bobs_bitplanes:
 	movem.l	a0-a1/d0-d2,-(a7)
 	
-	* set bitplanes
-	moveq	#0,d0
-	move.w	game_scroll_y,d0
-
-	lea		mulBG_NB_BYTES_PER_ROW_table,a2
-	.ifdef	MC68020
-	move.w	(a2,d0.w*2),d0		| compute Y offset
-	.else
-	add.w	d0,d0
-	move.w	(a2,d0.w),d0		| compute Y offset
-	.endif
-1:	
-	move.w	host_scroll_x,d2
-	and.w	#0x0FF,d2			| wraps at 0x100!
-
-	lea		scroll_table,a2
-	.ifdef	MC68020
-	lea		(a2,d2.w*4),a2
-	.else
-	add.w	d2,d2
-	add.w	d2,d2
-	add.w	d2,a2
-	.endif
-	
-	move.w	(a2)+,fine_x_scroll_value
-	move.w	host_scroll_x,d2
-	lsr.w	#6,d2
-	lsl.w	#3,d2
-	add.w	d2,d0
 	
 	
     moveq #NB_PLAYFIELD_PLANES-1,d1
@@ -3771,8 +3434,6 @@ set_bobs_bitplanes:
 2:
     move.l	playfield_displayed_screen_ptr(pc),a0
 	
-	add.l	d0,a0		| X/Y scroll offset (long!)
-	move.l	a0,d0		| first bitplane screen pointer
  	lea	bobs_bitplanes+2,a0
 1:
     swap d0
@@ -3785,13 +3446,7 @@ set_bobs_bitplanes:
 	movem.l	(a7)+,a0-a1/d0-d2
     rts
 
-scroll_table:
-	* generated by python script
-	.ifne	OPT_AGA_MODE
-	.include	"scroll_table_64.68k"
-	.else
-	.include	"scroll_table_16.68k"
-	.endif
+
 	
 object_type_table:
 	.include	"object_type_table.68k"
@@ -3839,7 +3494,7 @@ update_controls:
 	* directions + fire
 	move.l	joypad_1_state(pc),d1
 	jbsr	decode_joypad_controls
-	move.b	d0,(port_1_c001,a6)
+	*move.b	d0,(port_1_c001,a6)
 
 	rts
 	
@@ -3922,7 +3577,7 @@ read_system:
 0:
 
 1:	
-	move.b	d0,(system_c000,a6)
+	*move.b	d0,(system_c000,a6)
 	movem.l	(a7)+,a0/d1
 	rts
 
@@ -4067,37 +3722,10 @@ log_used_sprites:
 	rts
 	.endif
 	
-	.macro	SATURATE_Y	val
-	cmp.w	#\val+1,d0
-	jcc		0f
-	move.w	#\val,d0
-	jra		1f
-0:
-	.endm
-	
 skip_level:
 	movem.l	d0-a6,-(a7)
 	GET_MEMORY_START_IN_A6
-	lea	(global_y_lsb_eda2,a6),a0
-	move.b	(1,a0),d0
-	lsl.w	#8,d0
-	move.b	(a0),d0
-	bclr	#14,d0
-	sne		d1		| second loop
-	
-	SATURATE_Y	0x700
-	SATURATE_Y	0xF00
-	SATURATE_Y	0x1700
-	SATURATE_Y	0x1F00
-1:
-	move.b	#5,(game_state_e001,a6)		| state: level completed
-	tst.b	d1
-	jeq		2f
-	bset	#14,d0	| restore second loop bit
-2:
-	move.b	d0,(a0)+
-	lsr.w	#8,d0
-	move.b	d0,(a0)
+
 	movem.l	(a7)+,d0-a6
 	rts
 	
@@ -5047,28 +4675,6 @@ mid_screen_interrupt_count:
 	.align	2
 system_vbr:
 	.long	0
-target_ssp_value:
-	.word	0
-
-host_scroll_x:
-	.word	0
-min_scroll_x:
-	.word	0
-max_scroll_x:
-	.word	0
-previous_scroll_y:
-	.word	0
-previous_scroll_x:
-	.word	0
-
-game_scroll_x:
-	.word	0
-game_scroll_y:
-	.word	0
-
-bobs_game_scroll_y = game_scroll_y
-bobs_host_scroll_x = host_scroll_x
-	
 
 
 
@@ -5393,10 +4999,6 @@ mirror_buffer:
 mirror_buffer_end:
 	.endif
 	
-	
-	
-hw_sprite_ram_buffer:
-	.skip	HW_SPRITE_BUFFER_SIZE*8	| 8 64-bit wide sprites + control words + align
 	
 background_restore_buffer:
 	.skip	BG_SCREEN_SIZE
