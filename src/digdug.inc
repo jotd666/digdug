@@ -471,7 +471,22 @@ get_address:
 	jra 	0f
 1:
 	* > 0x6800
-	
+	cmp.l	#0xb840,a0
+	jcs		2f		| below B840 okay
+	jbsr	osd_get_last_known_pc
+	BREAKPOINT	"accessing unmapped memory between 0xB840 and 0xFFFF, PC in D7"
+	jra 	0f
+2:
+	cmp.l	#0x8400,a0
+	jcc		0f			| above 8400: okay	
+	cmp.l	#0x8000,a0
+	jcs		1f
+	jbsr	osd_get_last_known_pc
+	BREAKPOINT	"accessing video memory between 0x8000 and 0x83FF, PC in D7"
+	jra		0f
+1:
+	* the rest, ATM ignore
+0:
 	.endif
 	GET_UNCHECKED_ADDRESS_FUNC	a0
 	rts

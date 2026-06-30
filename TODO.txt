@@ -1,0 +1,3 @@
+- map address => tiles (like digdug2)
+- make "RAM OK" display
+- mockup fg/bg tiles/sprites

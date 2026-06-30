@@ -98,6 +98,10 @@ player_1_lives_840a = $840a
 player_2_lives_840b = $840b
 video_ram_8000 = $8000
 
+flip_screen_a007 = $a007
+bg_disable_a003 = $a003
+tx_color_mode_a002 = $a002
+
 reset_0000:		; [global]
 0000: F3          di
 0001: ED 56       im   1
@@ -272,7 +276,7 @@ init_00e6:
 011C: F3          di
 011D: AF          xor  a
 011E: 32 20 68    ld   ($6820),a
-0121: 21 07 A0    ld   hl,$A007
+0121: 21 07 A0    ld   hl,flip_screen_a007
 0124: 77          ld   (hl),a
 0125: 21 1B 9B    ld   hl,$9B1B
 0128: 36 10       ld   (hl),$10
@@ -427,7 +431,7 @@ mainloop_0238:
 0263: F1          pop  af
 0264: E1          pop  hl
 0265: CD F0 32    call $32F0
-0268: 21 03 A0    ld   hl,$A003
+0268: 21 03 A0    ld   hl,bg_disable_a003
 026B: 36 00       ld   (hl),$00
 026D: 21 CC 87    ld   hl,$87CC
 0270: CB 8E       res  1,(hl)
@@ -673,7 +677,7 @@ mainloop_0238:
 0483: 77          ld   (hl),a
 0484: 23          inc  hl
 0485: 36 E0       ld   (hl),$E0
-0487: CD A6 0B    call $0BA6
+0487: CD A6 0B    call zero_video_regs_0ba6
 048A: CD B1 0B    call $0BB1
 048D: C3 27 0A    jp   $0A27
 0490: 21 00 84    ld   hl,$8400
@@ -700,7 +704,7 @@ mainloop_0238:
 04B8: CD 0B 14    call $140B
 04BB: CD 45 18    call $1845
 04BE: CD 51 15    call $1551
-04C1: CD A6 0B    call $0BA6
+04C1: CD A6 0B    call zero_video_regs_0ba6
 04C4: CD B1 0B    call $0BB1
 04C7: C3 27 0A    jp   $0A27
 04CA: E5          push hl
@@ -793,7 +797,7 @@ mainloop_0238:
 0589: 36 00       ld   (hl),$00
 058B: 21 87 87    ld   hl,$8787
 058E: 36 FF       ld   (hl),$FF
-0590: CD A6 0B    call $0BA6
+0590: CD A6 0B    call zero_video_regs_0ba6
 0593: CD B1 0B    call $0BB1
 0596: 3E 02       ld   a,$02
 0598: 32 AE 85    ld   ($85AE),a
@@ -810,7 +814,7 @@ mainloop_0238:
 05B7: 28 05       jr   z,$05BE
 05B9: 3E 80       ld   a,$80
 05BB: 32 76 86    ld   ($8676),a
-05BE: CD A6 0B    call $0BA6
+05BE: CD A6 0B    call zero_video_regs_0ba6
 05C1: CD B1 0B    call $0BB1
 05C4: C3 27 0A    jp   $0A27
 05C7: 3A 6C 89    ld   a,($896C)
@@ -1073,7 +1077,7 @@ mainloop_0238:
 07F1: 32 30 68    ld   (watchdog_6830),a
 07F4: CB 56       bit  2,(hl)
 07F6: 28 05       jr   z,$07FD
-07F8: 21 07 A0    ld   hl,$A007
+07F8: 21 07 A0    ld   hl,flip_screen_a007
 07FB: 36 01       ld   (hl),$01
 07FD: 21 00 84    ld   hl,$8400
 0800: CB CE       set  1,(hl)
@@ -1087,7 +1091,7 @@ mainloop_0238:
 0814: 2B          dec  hl
 0815: 2B          dec  hl
 0816: CB 8E       res  1,(hl)
-0818: 21 07 A0    ld   hl,$A007
+0818: 21 07 A0    ld   hl,flip_screen_a007
 081B: 36 00       ld   (hl),$00
 081D: 18 E3       jr   $0802
 081F: 21 00 84    ld   hl,$8400
@@ -1149,7 +1153,7 @@ mainloop_0238:
 08A0: 21 00 84    ld   hl,$8400
 08A3: CB 8E       res  1,(hl)
 08A5: CD 4B 13    call $134B
-08A8: 21 07 A0    ld   hl,$A007
+08A8: 21 07 A0    ld   hl,flip_screen_a007
 08AB: 36 00       ld   (hl),$00
 08AD: C3 02 08    jp   $0802
 08B0: 21 02 84    ld   hl,$8402
@@ -1218,7 +1222,7 @@ mainloop_0238:
 0939: CD A1 00    call enqueue_00a1
 093C: 21 87 87    ld   hl,$8787
 093F: 36 00       ld   (hl),$00
-0941: 21 07 A0    ld   hl,$A007
+0941: 21 07 A0    ld   hl,flip_screen_a007
 0944: 36 00       ld   (hl),$00
 0946: C3 27 0A    jp   $0A27
 0949: 3A F5 98    ld   a,($98F5)
@@ -1291,7 +1295,7 @@ mainloop_0238:
 09DF: 21 0B 84    ld   hl,player_2_lives_840b
 09E2: 34          inc  (hl)
 09E3: C3 27 0A    jp   $0A27
-09E6: CD A6 0B    call $0BA6
+09E6: CD A6 0B    call zero_video_regs_0ba6
 09E9: CD B1 0B    call $0BB1
 09EC: 2A D6 87    ld   hl,($87D6)
 09EF: 23          inc  hl
@@ -1474,16 +1478,18 @@ mainloop_0238:
 0B95: CD 97 15    call $1597
 0B98: CD 25 16    call $1625
 0B9B: CD 40 16    call $1640
-0B9E: 21 03 A0    ld   hl,$A003
+0B9E: 21 03 A0    ld   hl,bg_disable_a003
 0BA1: CB C6       set  0,(hl)
 0BA3: C3 71 0A    jp   $0A71
+
+zero_video_regs_0ba6:
 0BA6: 21 00 A0    ld   hl,$A000
 0BA9: 06 04       ld   b,$04
 0BAB: 36 00       ld   (hl),$00
 0BAD: 23          inc  hl
 0BAE: 10 FB       djnz $0BAB
 0BB0: C9          ret
-0BB1: 11 07 A0    ld   de,$A007
+0BB1: 11 07 A0    ld   de,flip_screen_a007
 0BB4: 21 00 84    ld   hl,$8400
 0BB7: CB 4E       bit  1,(hl)
 0BB9: 28 08       jr   z,$0BC3
@@ -1595,19 +1601,19 @@ mainloop_0238:
 0CA4: 20 1A       jr   nz,$0CC0
 0CA6: 21 14 84    ld   hl,player_1_score_8414
 0CA9: 11 11 84    ld   de,$8411
-0CAC: CD 54 0D    call $0D54
+0CAC: CD 54 0D    call copy_3_bytes_hl_de_0d54
 0CAF: 21 2D 86    ld   hl,$862D
 0CB2: 11 33 86    ld   de,$8633
-0CB5: CD 54 0D    call $0D54
+0CB5: CD 54 0D    call copy_3_bytes_hl_de_0d54
 0CB8: 21 02 84    ld   hl,$8402
 0CBB: 22 F6 85    ld   ($85F6),hl
 0CBE: 18 18       jr   $0CD8
 0CC0: 21 17 84    ld   hl,player_2_score_8417
 0CC3: 11 11 84    ld   de,$8411
-0CC6: CD 54 0D    call $0D54
+0CC6: CD 54 0D    call copy_3_bytes_hl_de_0d54
 0CC9: 21 30 86    ld   hl,$8630
 0CCC: 11 33 86    ld   de,$8633
-0CCF: CD 54 0D    call $0D54
+0CCF: CD 54 0D    call copy_3_bytes_hl_de_0d54
 0CD2: 21 03 84    ld   hl,$8403
 0CD5: 22 F6 85    ld   ($85F6),hl
 0CD8: CB 7E       bit  7,(hl)
@@ -1663,6 +1669,8 @@ mainloop_0238:
 0D50: C9          ret
 0D51: CB CE       set  1,(hl)
 0D53: C9          ret
+
+copy_3_bytes_hl_de_0d54:
 0D54: 06 03       ld   b,$03
 0D56: 7E          ld   a,(hl)
 0D57: 12          ld   (de),a
@@ -1671,6 +1679,7 @@ mainloop_0238:
 0D5A: 32 30 68    ld   (watchdog_6830),a
 0D5D: 10 F7       djnz $0D56
 0D5F: C9          ret
+
 0D60: 06 03       ld   b,$03
 0D62: EB          ex   de,hl
 0D63: A7          and  a
@@ -2577,16 +2586,7 @@ mainloop_0238:
 1440: DD 23       inc  ix
 1442: 10 F7       djnz $143B
 1444: C9          ret
-1445: A1          and  c
-1446: A2          and  d
-1447: A0          and  b
-1448: A1          and  c
-1449: 7F          ld   a,a
-144A: AC          xor  h
-144B: 9C          sbc  a,h
-144C: A8          xor  b
-144D: AB          xor  e
-144E: 9E          sbc  a,(hl)
+
 144F: 21 DA 83    ld   hl,$83DA
 1452: DD 21 65 14 ld   ix,$1465
 1456: 06 03       ld   b,$03
@@ -2594,12 +2594,7 @@ mainloop_0238:
 145B: 21 C7 83    ld   hl,$83C7
 145E: DD 21 68 14 ld   ix,$1468
 1462: C3 56 14    jp   $1456
-1465: 91          sub  c
-1466: AE          xor  (hl)
-1467: A9          xor  c
-1468: 92          sub  d
-1469: AE          xor  (hl)
-146A: A9          xor  c
+
 146B: CD 32 14    call $1432
 146E: CD 83 14    call $1483
 1471: CD DE 14    call $14DE
@@ -3272,6 +3267,7 @@ mainloop_0238:
 199F: 23          inc  hl
 19A0: 77          ld   (hl),a
 19A1: 18 22       jr   $19C5
+
 19A3: 21 00 84    ld   hl,$8400
 19A6: CB 4E       bit  1,(hl)
 19A8: 20 0C       jr   nz,$19B6
@@ -3798,7 +3794,7 @@ decrement_lives_1b7d:
 1DF5: 2E 3A       ld   l,$3A
 1DF7: 22 89 87    ld   ($8789),hl
 1DFA: 3E 01       ld   a,$01
-1DFC: 32 03 A0    ld   ($A003),a
+1DFC: 32 03 A0    ld   (bg_disable_a003),a
 1DFF: CD 8D 18    call $188D
 1E02: CD A7 18    call $18A7
 1E05: CD F2 0B    call $0BF2
@@ -6315,9 +6311,9 @@ add_to_score_2fb5:
 339E: 22 C7 89    ld   ($89C7),hl
 33A1: CD 33 3E    call $3E33
 33A4: 21 2D 37    ld   hl,$372D
-33A7: CD F3 36    call $36F3
-33AA: CD F3 36    call $36F3
-33AD: CD F3 36    call $36F3
+33A7: CD F3 36    call write_text_36f3
+33AA: CD F3 36    call write_text_36f3
+33AD: CD F3 36    call write_text_36f3
 33B0: 21 80 89    ld   hl,$8980
 33B3: 11 2F 83    ld   de,$832F
 33B6: 01 00 03    ld   bc,$0300
@@ -6512,10 +6508,10 @@ add_to_score_2fb5:
 353A: 89          adc  a,c
 353B: CD 33 3E    call $3E33
 353E: 21 77 37    ld   hl,$3777
-3541: CD F3 36    call $36F3
-3544: CD F3 36    call $36F3
-3547: CD F3 36    call $36F3
-354A: CD F3 36    call $36F3
+3541: CD F3 36    call write_text_36f3
+3544: CD F3 36    call write_text_36f3
+3547: CD F3 36    call write_text_36f3
+354A: CD F3 36    call write_text_36f3
 354D: 3E 01       ld   a,$01
 354F: 32 82 9A    ld   ($9A82),a
 3552: 3A 23 84    ld   a,($8423)
@@ -6597,7 +6593,7 @@ add_to_score_2fb5:
 35E3: AF          xor  a
 35E4: 32 C5 89    ld   ($89C5),a
 35E7: 21 63 37    ld   hl,$3763
-35EA: CD F3 36    call $36F3
+35EA: CD F3 36    call write_text_36f3
 35ED: 11 5D 83    ld   de,$835D
 35F0: 06 05       ld   b,$05
 35F2: CD F8 35    call $35F8
@@ -6734,25 +6730,27 @@ sub_20_to_de_36e9:
 36F2: C9          ret
 
 * < HL: rom address
-36F3: 4E          ld   c,(hl)		; [breakpoint]
+write_text_36f3:
+36F3: 4E          ld   c,(hl)	; color?
 36F4: 23          inc  hl
-36F5: 46          ld   b,(hl)
+36F5: 46          ld   b,(hl)	; number of characters to write
 36F6: 23          inc  hl
 36F7: 5E          ld   e,(hl)
 36F8: 23          inc  hl
-36F9: 56          ld   d,(hl)
+36F9: 56          ld   d,(hl)	; destination screen address
 36FA: 23          inc  hl
 36FB: 7E          ld   a,(hl)
-36FC: CD 0C 37    call $370C
+36FC: CD 0C 37    call character_to_tile_code_370c
 36FF: FE FF       cp   $FF
 3701: 28 05       jr   z,$3708
 3703: 81          add  a,c
-3704: 12          ld   (de),a
-3705: CD E9 36    call sub_20_to_de_36e9
+3704: 12          ld   (de),a		; [video_address]
+3705: CD E9 36    call sub_20_to_de_36e9	; move X+1
 3708: 23          inc  hl
 3709: 10 F0       djnz $36FB
 370B: C9          ret
 
+character_to_tile_code_370c:
 370C: D6 30       sub  $30
 370E: FE 0A       cp   $0A
 3710: D8          ret  c
@@ -6780,7 +6778,7 @@ memory_test_387e:
 3881: 32 00 71    ld   ($7100),a
 3884: AF          xor  a
 3885: 32 23 68    ld   ($6823),a
-3888: 32 02 A0    ld   ($A002),a
+3888: 32 02 A0    ld   (tx_color_mode_a002),a
 388B: 32 20 68    ld   ($6820),a
 388E: 3D          dec  a
 388F: 32 00 70    ld   ($7000),a
@@ -6862,15 +6860,15 @@ end_memory_test_3911:   	; [global]
 3911: 21 00 80    ld   hl,$8000
 3914: 11 E0 89    ld   de,$89E0
 3917: 01 20 00    ld   bc,$0020
-391A: ED B0       ldir
+391A: ED B0       ldir			; [unchecked_address]
 391C: 31 00 9A    ld   sp,$9A00
 391F: 32 30 68    ld   (watchdog_6830),a
 3922: 21 00 88    ld   hl,$8800
 3925: 22 02 89    ld   ($8902),hl
 3928: 22 00 89    ld   ($8900),hl
 392B: CD 3B 3E    call $3E3B
-392E: 21 95 3E    ld   hl,$3E95
-3931: CD F3 36    call $36F3
+392E: 21 95 3E    ld   hl,$3E95		; RAM OK
+3931: CD F3 36    call write_text_36f3
 3934: AF          xor  a
 3935: 32 00 8A    ld   ($8A00),a
 3938: 32 01 8A    ld   ($8A01),a
@@ -6881,6 +6879,7 @@ end_memory_test_3911:   	; [global]
 3945: 32 26 68    ld   ($6826),a
 3948: 32 27 68    ld   ($6827),a
 394B: 32 23 68    ld   ($6823),a
+; perform ROM checksum
 394E: 11 FC 3F    ld   de,$3FFC
 3951: 21 00 00    ld   hl,$0000
 3954: 01 00 10    ld   bc,$1000
@@ -6912,8 +6911,8 @@ end_memory_test_3911:   	; [global]
 3984: 28 FA       jr   z,$3980
 3986: 3C          inc  a
 3987: C2 6A 3E    jp   nz,$3E6A
-398A: 21 9F 3E    ld   hl,$3E9F
-398D: CD F3 36    call $36F3
+398A: 21 9F 3E    ld   hl,$3E9F		; ROM OK
+398D: CD F3 36    call write_text_36f3
 3990: AF          xor  a
 3991: 32 00 8A    ld   ($8A00),a
 3994: 32 01 8A    ld   ($8A01),a
@@ -7063,7 +7062,7 @@ end_memory_test_3911:   	; [global]
 3AB8: 21 8A 3F    ld   hl,$3F8A
 3ABB: 3A CF 89    ld   a,($89CF)
 3ABE: A7          and  a
-3ABF: C4 F3 36    call nz,$36F3
+3ABF: C4 F3 36    call nz,write_text_36f3
 3AC2: 21 D9 89    ld   hl,$89D9
 3AC5: 11 D8 89    ld   de,$89D8
 3AC8: 01 07 00    ld   bc,$0007
@@ -7098,10 +7097,10 @@ end_memory_test_3911:   	; [global]
 3AF7: CF          rst  $08
 3AF8: E5          push hl
 3AF9: 21 BF 3E    ld   hl,$3EBF
-3AFC: CD F3 36    call $36F3
-3AFF: CD F3 36    call $36F3
-3B02: CD F3 36    call $36F3
-3B05: CD F3 36    call $36F3
+3AFC: CD F3 36    call write_text_36f3
+3AFF: CD F3 36    call write_text_36f3
+3B02: CD F3 36    call write_text_36f3
+3B05: CD F3 36    call write_text_36f3
 3B08: D1          pop  de
 3B09: 21 48 83    ld   hl,$8348
 3B0C: 01 1A 8A    ld   bc,$8A1A
@@ -7147,7 +7146,7 @@ end_memory_test_3911:   	; [global]
 3B50: 21 FF FF    ld   hl,$FFFF
 3B53: 22 D0 89    ld   ($89D0),hl
 3B56: 21 6F 3F    ld   hl,$3F6F
-3B59: CD F3 36    call $36F3
+3B59: CD F3 36    call write_text_36f3
 3B5C: C3 AC 3B    jp   $3BAC
 3B5F: 21 B2 3F    ld   hl,$3FB2
 3B62: 4F          ld   c,a
@@ -7159,8 +7158,8 @@ end_memory_test_3911:   	; [global]
 3B6E: 09          add  hl,bc
 3B6F: E5          push hl
 3B70: 21 E7 3E    ld   hl,$3EE7
-3B73: CD F3 36    call $36F3
-3B76: CD F3 36    call $36F3
+3B73: CD F3 36    call write_text_36f3
+3B76: CD F3 36    call write_text_36f3
 3B79: E1          pop  hl
 3B7A: 7E          ld   a,(hl)
 3B7B: 32 92 81    ld   ($8192),a
@@ -7174,16 +7173,16 @@ end_memory_test_3911:   	; [global]
 3B8B: E6 1F       and  $1F
 3B8D: 32 94 81    ld   ($8194),a
 3B90: 21 04 3F    ld   hl,$3F04
-3B93: CD F3 36    call $36F3
-3B96: CD F3 36    call $36F3
+3B93: CD F3 36    call write_text_36f3
+3B96: CD F3 36    call write_text_36f3
 3B99: F1          pop  af
 3B9A: CB 7F       bit  7,a
 3B9C: 28 14       jr   z,$3BB2
 3B9E: E6 1F       and  $1F
 3BA0: 32 96 81    ld   ($8196),a
 3BA3: 21 21 3F    ld   hl,$3F21
-3BA6: CD F3 36    call $36F3
-3BA9: C3 F3 36    jp   $36F3
+3BA6: CD F3 36    call write_text_36f3
+3BA9: C3 F3 36    jp   write_text_36f3
 3BAC: 21 54 83    ld   hl,$8354
 3BAF: CD B5 3B    call $3BB5
 3BB2: 21 56 83    ld   hl,$8356
@@ -7205,18 +7204,18 @@ end_memory_test_3911:   	; [global]
 3BD3: 3E 37       ld   a,$37
 3BD5: 32 4C 82    ld   ($824C),a
 3BD8: 21 3E 3F    ld   hl,$3F3E
-3BDB: C3 F3 36    jp   $36F3
+3BDB: C3 F3 36    jp   write_text_36f3
 3BDE: 3A 8D 89    ld   a,($898D)
 3BE1: C6 1A       add  a,$1A
 3BE3: 32 AE 82    ld   ($82AE),a
 3BE6: 21 48 3F    ld   hl,$3F48
-3BE9: C3 F3 36    jp   $36F3
+3BE9: C3 F3 36    jp   write_text_36f3
 3BEC: 3A 8E 89    ld   a,($898E)
 3BEF: 21 50 3F    ld   hl,$3F50
 3BF2: A7          and  a
-3BF3: CA F3 36    jp   z,$36F3
+3BF3: CA F3 36    jp   z,write_text_36f3
 3BF6: 21 5B 3F    ld   hl,$3F5B
-3BF9: C3 F3 36    jp   $36F3
+3BF9: C3 F3 36    jp   write_text_36f3
 3BFC: 3A 89 89    ld   a,($8989)
 3BFF: 0E 00       ld   c,$00
 3C01: FE 0A       cp   $0A
@@ -7235,7 +7234,7 @@ end_memory_test_3911:   	; [global]
 3C1D: A7          and  a
 3C1E: C4 27 3C    call nz,$3C27
 3C21: 21 66 3F    ld   hl,$3F66
-3C24: C3 F3 36    jp   $36F3
+3C24: C3 F3 36    jp   write_text_36f3
 3C27: 3A 89 89    ld   a,($8989)
 3C2A: 3C          inc  a
 3C2B: FE 15       cp   $15
@@ -7312,7 +7311,7 @@ end_memory_test_3911:   	; [global]
 3CB8: 28 02       jr   z,$3CBC
 3CBA: 3E 01       ld   a,$01
 3CBC: 3C          inc  a
-3CBD: 32 07 A0    ld   ($A007),a
+3CBD: 32 07 A0    ld   (flip_screen_a007),a
 3CC0: 3A A7 85    ld   a,($85A7)
 3CC3: E6 01       and  $01
 3CC5: 28 05       jr   z,$3CCC
@@ -7415,7 +7414,7 @@ end_memory_test_3911:   	; [global]
 3DD4: 3E 26       ld   a,$26
 3DD6: 32 02 83    ld   ($8302),a
 3DD9: 3E 01       ld   a,$01
-3DDB: 32 03 A0    ld   ($A003),a
+3DDB: 32 03 A0    ld   (bg_disable_a003),a
 3DDE: 32 30 68    ld   (watchdog_6830),a
 3DE1: 18 FE       jr   $3DE1
 
@@ -7483,13 +7482,13 @@ memory_test_3de3:
 3E39: 18 06       jr   $3E41
 3E3B: 21 00 80    ld   hl,$8000
 3E3E: 01 00 04    ld   bc,$0400
-3E41: 36 37       ld   (hl),$37
+3E41: 36 37       ld   (hl),$37		; [video_address]
 3E43: 23          inc  hl
 3E44: 0D          dec  c
 3E45: 20 FA       jr   nz,$3E41
 3E47: 10 F8       djnz $3E41
 3E49: 3E 01       ld   a,$01
-3E4B: 32 03 A0    ld   ($A003),a
+3E4B: 32 03 A0    ld   (bg_disable_a003),a
 3E4E: 21 80 8B    ld   hl,$8B80
 3E51: CD 5D 3E    call $3E5D
 3E54: 21 80 93    ld   hl,$9380

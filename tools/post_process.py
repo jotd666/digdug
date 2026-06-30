@@ -263,7 +263,7 @@ with open(source_dir / "conv.s") as f:
             line = change_instruction("RESTORE_STACK",lines,i)
         elif address == 0x36e9:
             line = """\tsub.b\t#0x20,d4
-\tjcs\t0f
+\tjcc\t0f
 \tsubq.b\t#1,d3
 0:
 \trts
