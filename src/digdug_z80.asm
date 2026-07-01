@@ -101,6 +101,9 @@ video_ram_8000 = $8000
 flip_screen_a007 = $a007
 bg_disable_a003 = $a003
 tx_color_mode_a002 = $a002
+nb_credits_85a5 = $85a5
+credits_unit_8014 = $8014
+credits_tens_8015 = $8015
 
 reset_0000:		; [global]
 0000: F3          di
@@ -150,8 +153,12 @@ watchdog_delay_005a:
 0063: 20 F8       jr   nz,$005D
 0065: C9          ret
 
-; called twice as much as irq: 1/120s!!
-dequeue_006c:	; [global]
+; called A LOT very frequently, handles credit, start, & player controls
+; all comms with the control MCU (read in 7100)
+irq_0066:    ; [global]
+0066: D9          exx		; load parameters
+0067: ED A0       ldi		; copy 7001 into 85A8 or whatever???
+0069: EA 9E 00    jp   pe,$009E	; jumps if bc!=0
 006C: F5          push af
 006D: 2A 00 89    ld   hl,($8900)
 0070: 7E          ld   a,(hl)
@@ -189,7 +196,7 @@ dequeue_006c:	; [global]
 009E: D9          exx
 009F: ED 45       retn
 
-enqueue_00a1:
+mcu_read_00a1:
 00A1: 08          ex   af,af'
 00A2: F3          di
 00A3: 3A 00 71    ld   a,($7100)
@@ -200,6 +207,7 @@ enqueue_00a1:
 00AC: 32 00 71    ld   ($7100),a
 00AF: FB          ei
 00B0: C9          ret
+
 00B1: E5          push hl
 00B2: D5          push de
 00B3: EB          ex   de,hl
@@ -367,7 +375,7 @@ init_00e6:
 01DE: 11 00 70    ld   de,$7000
 01E1: 01 04 00    ld   bc,$0004
 01E4: 3E C1       ld   a,$C1
-01E6: CD A1 00    call enqueue_00a1
+01E6: CD A1 00    call mcu_read_00a1
 01E9: CD A6 15    call $15A6
 01EC: 21 00 80    ld   hl,$8000
 01EF: 06 40       ld   b,$40
@@ -479,13 +487,13 @@ mainloop_0238:
 02C7: 3A 9A 87    ld   a,($879A)
 02CA: A7          and  a
 02CB: 20 06       jr   nz,$02D3
-02CD: 3A A5 85    ld   a,($85A5)
+02CD: 3A A5 85    ld   a,(nb_credits_85a5)
 02D0: 32 A6 85    ld   ($85A6),a
 02D3: 21 00 70    ld   hl,$7000
 02D6: 11 A7 85    ld   de,$85A7
 02D9: 01 03 00    ld   bc,$0003
 02DC: 3E 71       ld   a,$71
-02DE: CD A1 00    call enqueue_00a1
+02DE: CD A1 00    call mcu_read_00a1
 02E1: 3A 9A 87    ld   a,($879A)
 02E4: A7          and  a
 02E5: C2 27 0A    jp   nz,$0A27
@@ -534,7 +542,7 @@ mainloop_0238:
 0342: 1A          ld   a,(de)
 0343: E6 30       and  $30
 0345: 77          ld   (hl),a
-0346: 21 A5 85    ld   hl,$85A5
+0346: 21 A5 85    ld   hl,nb_credits_85a5
 0349: 11 A6 85    ld   de,$85A6
 034C: 3A A7 85    ld   a,($85A7)
 034F: 77          ld   (hl),a
@@ -1219,7 +1227,7 @@ mainloop_0238:
 0931: 11 00 70    ld   de,$7000
 0934: 01 04 00    ld   bc,$0004
 0937: 3E C1       ld   a,$C1
-0939: CD A1 00    call enqueue_00a1
+0939: CD A1 00    call mcu_read_00a1
 093C: 21 87 87    ld   hl,$8787
 093F: 36 00       ld   (hl),$00
 0941: 21 07 A0    ld   hl,flip_screen_a007
@@ -1324,7 +1332,7 @@ mainloop_0238:
 0A2A: 11 CE 87    ld   de,$87CE
 0A2D: 01 02 00    ld   bc,$0002
 0A30: 3E D2       ld   a,$D2
-0A32: CD A1 00    call enqueue_00a1
+0A32: CD A1 00    call mcu_read_00a1
 0A35: 32 30 68    ld   (watchdog_6830),a
 0A38: 3A 9A 87    ld   a,($879A)
 0A3B: A7          and  a
@@ -2784,7 +2792,7 @@ copy_3_bytes_hl_de_0d54:
 15DF: 11 16 80    ld   de,$8016
 15E2: 01 06 00    ld   bc,$0006
 15E5: ED B0       ldir
-15E7: 3A A5 85    ld   a,($85A5)
+15E7: 3A A5 85    ld   a,(nb_credits_85a5)
 15EA: 47          ld   b,a
 15EB: E6 0F       and  $0F
 15ED: C6 10       add  a,$10
@@ -2804,7 +2812,7 @@ copy_3_bytes_hl_de_0d54:
 1605: C9          ret
 1606: 21 2D 81    ld   hl,$812D
 1609: 11 20 00    ld   de,$0020
-160C: 3A A5 85    ld   a,($85A5)
+160C: 3A A5 85    ld   a,(nb_credits_85a5)
 160F: FE 01       cp   $01
 1611: 20 0A       jr   nz,$161D
 1613: DD 21 6F 30 ld   ix,$306F
@@ -3863,7 +3871,7 @@ decrement_lives_1b7d:
 1EA1: 21 E6 80    ld   hl,$80E6
 1EA4: 3E 13       ld   a,$13
 1EA6: CD CB 15    call $15CB
-1EA9: 3A A5 85    ld   a,($85A5)
+1EA9: 3A A5 85    ld   a,(nb_credits_85a5)
 1EAC: FE 00       cp   $00
 1EAE: 20 06       jr   nz,$1EB6
 1EB0: CD CC 1E    call $1ECC

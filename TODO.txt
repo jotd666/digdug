@@ -1,3 +1,5 @@
 - map address => tiles (like digdug2)
 - make "RAM OK" display
 - mockup fg/bg tiles/sprites
+- block 66 and a1 see if game runs. Try to emulate what it does to avoid
+  emulating behaviour of namco chips
