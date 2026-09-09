@@ -9,6 +9,8 @@ aga_src_dir = src_dir / "aga"
 ocs_src_dir = src_dir / "ocs"
 ecs_src_dir = src_dir / "ecs"
 
+magenta = (254,0,254)
+black = (0,0,0)
 sheets_path = this_dir / ".." / "sheets"
 dump_dir = this_dir / "dumps"
 
@@ -16,6 +18,12 @@ used_sprite_cluts_file = this_dir / "used_sprite_cluts.json"
 used_tile_cluts_file = this_dir / "used_tile_cluts.json"
 used_graphics_dir = this_dir / "used_graphics"
 
+SPRITE_NB_TILES = 0x100
+FG_NB_TILES = 0x200
+FG_NB_CLUTS = 0x10
+BG_NB_TILES = 0x100
+BG_NB_CLUTS = 0x40
+SPRITE_NB_CLUTS = 0x40
 
 def dump_asm_bytes(*args,**kwargs):
     bitplanelib.dump_asm_bytes(*args,**kwargs,mit_format=True)
@@ -58,69 +66,22 @@ def set_names(rval,start,end,name):
 
 def get_sprite_names():
 
-    rval = dict()
+    rval = {}
 
 ##    rval[0x155] = "blank"
-    set_names(rval,0x5C,0x5E,"flame")
-    set_names(rval,0x58,0x5A,"flame")
-    set_names(rval,0x6C,0x6D,"flame")
-    set_names(rval,0x60,0x6a,"flame")
-    set_names(rval,0xF5,0x100,"points")
-    set_names(rval,0x18,0x20,"dragon")
-    set_names(rval,0x5a,0x5C,"dragon")
-    set_names(rval,0x5e,0x60,"dragon")
-    set_names(rval,0x3C,0x3E,"game_over")
-    set_names(rval,0x6C,0x70,"ghost")
 
-    rval[0x6a] = "red_enemy_inflating"
-    rval[0x6b] = "dragon_inflating"
-    rval[0x62] = "dragon_firing"
-    rval[0x7C] = "banana"
-    rval[0x7D] = "corn"
-    rval[0x7E] = "pineapple"
-    rval[0x7F] = "cocktail"
-    rval[0x50] = "eggplant"
-    rval[0x51] = "tomato"
-    rval[0x52] = "watermelon"
-    rval[0x53] = "grapes"
-    rval[0x46] = "turnip"
-    rval[0x47] = "mushroom"
-    rval[0x69] = "dragon"
-    set_names(rval,0x80,0xC8,"earth_crumbling")
-    set_names(rval,0x38,0x3C,"splash")
-    set_names(rval,0x10,0x18,"red_enemy")
-    set_names(rval,0xC8,0xD4,"red_enemy")  # double height
-    set_names(rval,0xD4,0xE0,"dragon")  # double height
-    set_names(rval,0xE0,0xF5,"title_letter")
-    set_names(rval,0x20,0x38,"player_digging")  # double height
-    set_names(rval,0x0,0x10,"player")
-    set_names(rval,0x70,0x7c,"hose")
 
-    set_names(rval,0x48,0x50,"player_pumping")
-    set_names(rval,0x40,0x46,"player_falling")
-    set_names(rval,0x54,0x58,"player_dying")
 
 
 
 
     return rval
 
-def get_double_size_y_sprites():
-    return set(range(0x20,0x38,2))   # drilling hero
-def get_double_size_x_sprites():
-    game_grouped = {0X59,0x5D,0x64,0x5c,0x61,0x65,0x60,0x75}  # fire spitting dragon, flame, hose
-    extra_grouped = {0x3C,0xE0,0xE2,0xE6,0xE8,0xEA}  # will speed up display
-    rval = {x:True for x in game_grouped}
-    rval.update({x:False for x in extra_grouped})
-    return rval
-
-def get_double_size_xy_sprites():
-    return set(range(0xC8,0xE0,4))   # inflating monsters
 
 def get_mirror_sprites():
     """ return the index of the sprites that need mirroring
 """
-    rval = set(range(0,0x200))
+    rval = {}
     return rval
 
 
